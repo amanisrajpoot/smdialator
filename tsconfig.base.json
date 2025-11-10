@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@scheduler/api/*": ["apps/api/src/*"],
+      "@connectors/*": ["packages/connectors/src/*"],
+      "@ai/*": ["packages/ai/src/*"],
+      "@n8n/*": ["packages/n8n/src/*"],
+      "@common/*": ["packages/common/src/*"],
+      "@api-lib/*": ["apps/web/app/api/_lib/*"]
+    }
+  }
+}

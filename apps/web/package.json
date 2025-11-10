@@ -1,0 +1,43 @@
+{
+  "name": "@scheduler/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@scheduler/api": "workspace:*",
+    "@scheduler/common": "workspace:*",
+    "@scheduler/connectors": "workspace:*",
+    "@headlessui/react": "^2.1.9",
+    "@heroicons/react": "^2.1.5",
+    "@tanstack/react-query": "^5.52.0",
+    "@prisma/client": "^5.20.0",
+    "axios": "^1.7.7",
+    "clsx": "^2.1.1",
+    "dayjs": "^1.11.13",
+    "lucide-react": "^0.441.0",
+    "next": "14.2.5",
+    "next-themes": "^0.3.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "recharts": "^2.10.3",
+    "zustand": "^4.5.6",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.9.0",
+    "eslint-config-next": "14.2.5",
+    "postcss": "^8.4.45",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.3"
+  }
+}
