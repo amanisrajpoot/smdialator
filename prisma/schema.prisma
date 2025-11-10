@@ -1,0 +1,337 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MANAGER
+  EDITOR
+  VIEWER
+  EXTERNAL_REVIEWER
+}
+
+enum SocialPlatform {
+  FACEBOOK_PAGE
+  INSTAGRAM_BUSINESS
+  THREADS
+  TWITTER
+  LINKEDIN_PAGE
+  LINKEDIN_PROFILE
+  TIKTOK
+  PINTEREST
+  YOUTUBE
+  SNAPCHAT
+  REDDIT
+  GOOGLE_BUSINESS
+  CUSTOM_WEBHOOK
+}
+
+enum ContentStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  FAILED
+  ARCHIVED
+}
+
+enum ScheduledPostStatus {
+  QUEUED
+  PENDING_APPROVAL
+  READY
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum PublishingJobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  RETRYING
+  CANCELLED
+}
+
+enum AssetType {
+  IMAGE
+  VIDEO
+  CAROUSEL
+  DOCUMENT
+  AUDIO
+}
+
+enum AutomationTrigger {
+  POST_APPROVED
+  POST_PUBLISHED
+  POST_FAILED
+  NEW_DRAFT
+  NEW_COMMENT
+  MANUAL
+}
+
+enum AutomationAction {
+  SCHEDULE_POST
+  UPDATE_DRAFT
+  NOTIFY_SLACK
+  SEND_EMAIL
+  TRIGGER_N8N
+  CALL_WEBHOOK
+}
+
+model User {
+  id             String           @id @default(cuid())
+  email          String           @unique
+  passwordHash   String
+  name           String?
+  role           UserRole         @default(EDITOR)
+  pictureUrl     String?
+  locale         String?          @default("en")
+  workspaces     WorkspaceMember[]
+  refreshTokens  RefreshToken[]
+  auditLogs      AuditLog[]       @relation("UserAuditLogs")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model Workspace {
+  id              String              @id @default(cuid())
+  name            String
+  slug            String              @unique
+  timezone        String              @default("UTC")
+  description     String?
+  logoUrl         String?
+  members         WorkspaceMember[]
+  profiles        SocialProfile[]
+  contents        ContentItem[]
+  campaigns       Campaign[]
+  schedules       ScheduledPost[]
+  assets          Asset[]
+  automations     AutomationWorkflow[]
+  auditLogs       AuditLog[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+model WorkspaceMember {
+  id                   String     @id @default(cuid())
+  userId               String
+  workspaceId          String
+  role                 UserRole   @default(EDITOR)
+  notificationSettings Json       @default("{}")
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([userId, workspaceId])
+}
+
+model SocialProfile {
+  id                   String          @id @default(cuid())
+  workspaceId          String
+  platform             SocialPlatform
+  displayName          String
+  handle               String
+  externalId           String          @unique
+  accessToken          String
+  refreshToken         String?
+  tokenExpiresAt       DateTime?
+  metadata             Json             @default("{}")
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  deletedAt            DateTime?
+
+  workspace            Workspace        @relation(fields: [workspaceId], references: [id])
+  scheduledPosts       ScheduledPost[]
+  publishingJobs       PublishingJob[]
+  metrics              SocialMetric[]
+}
+
+model ContentItem {
+  id              String            @id @default(cuid())
+  workspaceId     String
+  campaignId      String?
+  title           String
+  summary         String?
+  status          ContentStatus     @default(DRAFT)
+  targetPlatforms SocialPlatform[]
+  aiContext       Json              @default("{}")
+  createdById     String
+  updatedById     String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  workspace   Workspace      @relation(fields: [workspaceId], references: [id])
+  campaign    Campaign?      @relation(fields: [campaignId], references: [id])
+  createdBy   User           @relation("ContentCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?          @relation("ContentUpdatedBy", fields: [updatedById], references: [id])
+  versions    ContentVersion[]
+  comments    ContentComment[]
+  schedules   ScheduledPost[]
+}
+
+model ContentVersion {
+  id           String       @id @default(cuid())
+  contentId    String
+  authorId     String
+  body         String
+  assets       Json         @default("[]")
+  prompts      Json         @default("[]")
+  createdAt    DateTime     @default(now())
+
+  content      ContentItem  @relation(fields: [contentId], references: [id])
+  author       User         @relation(fields: [authorId], references: [id])
+}
+
+model ContentComment {
+  id          String      @id @default(cuid())
+  contentId   String
+  authorId    String
+  body        String
+  resolvedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  content     ContentItem @relation(fields: [contentId], references: [id])
+  author      User        @relation(fields: [authorId], references: [id])
+}
+
+model Campaign {
+  id            String        @id @default(cuid())
+  workspaceId   String
+  name          String
+  description   String?
+  startDate     DateTime?
+  endDate       DateTime?
+  objectives    String?
+  color         String?       @default("#6366f1")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  workspace     Workspace     @relation(fields: [workspaceId], references: [id])
+  contents      ContentItem[]
+  schedules     ScheduledPost[]
+}
+
+model ScheduledPost {
+  id              String              @id @default(cuid())
+  workspaceId     String
+  contentId       String
+  campaignId      String?
+  profileId       String
+  scheduledFor    DateTime
+  localTimezone   String              @default("UTC")
+  status          ScheduledPostStatus @default(QUEUED)
+  failureReason   String?
+  metadata        Json                @default("{}")
+  createdById     String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  workspace       Workspace       @relation(fields: [workspaceId], references: [id])
+  content         ContentItem     @relation(fields: [contentId], references: [id])
+  campaign        Campaign?       @relation(fields: [campaignId], references: [id])
+  profile         SocialProfile   @relation(fields: [profileId], references: [id])
+  createdBy       User            @relation(fields: [createdById], references: [id])
+  publishingJobs  PublishingJob[]
+}
+
+model PublishingJob {
+  id               String             @id @default(cuid())
+  scheduledPostId  String
+  profileId        String
+  status           PublishingJobStatus @default(QUEUED)
+  attempt          Int                @default(0)
+  payload          Json               @default("{}")
+  response         Json?
+  error            Json?
+  queuedAt         DateTime           @default(now())
+  startedAt        DateTime?
+  finishedAt       DateTime?
+
+  scheduledPost    ScheduledPost @relation(fields: [scheduledPostId], references: [id])
+  profile          SocialProfile @relation(fields: [profileId], references: [id])
+}
+
+model SocialMetric {
+  id             String         @id @default(cuid())
+  profileId      String
+  scheduledPostId String?
+  capturedAt     DateTime       @default(now())
+  impressions    Int            @default(0)
+  reach          Int            @default(0)
+  engagements    Int            @default(0)
+  clicks         Int            @default(0)
+  reactions      Json           @default("{}")
+  extra          Json           @default("{}")
+
+  profile        SocialProfile  @relation(fields: [profileId], references: [id])
+  scheduledPost  ScheduledPost? @relation(fields: [scheduledPostId], references: [id])
+}
+
+model Asset {
+  id             String      @id @default(cuid())
+  workspaceId    String
+  ownerId        String
+  type           AssetType
+  url            String
+  thumbnailUrl   String?
+  metadata       Json         @default("{}")
+  tags           String[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  workspace      Workspace   @relation(fields: [workspaceId], references: [id])
+  owner          User        @relation(fields: [ownerId], references: [id])
+}
+
+model AutomationWorkflow {
+  id             String              @id @default(cuid())
+  workspaceId    String
+  name           String
+  description    String?
+  trigger        AutomationTrigger
+  actions        AutomationAction[]
+  config         Json                @default("{}")
+  isActive       Boolean             @default(true)
+  createdById    String
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  workspace      Workspace           @relation(fields: [workspaceId], references: [id])
+  createdBy      User                @relation(fields: [createdById], references: [id])
+}
+
+model AuditLog {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  actorId      String?
+  action       String
+  entity       String
+  entityId     String?
+  payload      Json      @default("{}")
+  createdAt    DateTime  @default(now())
+
+  workspace    Workspace @relation(fields: [workspaceId], references: [id])
+  actor        User?     @relation("UserAuditLogs", fields: [actorId], references: [id])
+}
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  userId     String
+  token      String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+}
