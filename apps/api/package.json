@@ -12,10 +12,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@scheduler/ai": "0.1.0",
-    "@scheduler/common": "0.1.0",
-    "@scheduler/connectors": "0.1.0",
-    "@scheduler/n8n": "0.1.0",
+    "@scheduler/ai": "workspace:*",
+    "@scheduler/common": "workspace:*",
+    "@scheduler/connectors": "workspace:*",
+    "@scheduler/n8n": "workspace:*",
     "@prisma/client": "^5.20.0",
     "@trpc/server": "^11.0.0",
     "axios": "^1.7.7",
