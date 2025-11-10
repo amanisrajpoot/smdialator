@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { Calendar, BarChart3, Activity, Zap, CloudUpload } from "lucide-react";
+import { Calendar, BarChart3, Activity, Zap, CloudUpload, Workflow } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEffect } from "react";
@@ -10,6 +10,7 @@ import { setAuthToken } from "@/lib/api";
 import { DashboardCalendar } from "@/components/dashboard/calendar";
 import { ConnectorGrid } from "@/components/dashboard/connector-grid";
 import { AnalyticsOverview } from "@/components/dashboard/analytics-overview";
+import Link from "next/link";
 
 const workspaceId = process.env.NEXT_PUBLIC_DEMO_WORKSPACE_ID;
 
@@ -88,9 +89,18 @@ export default function DashboardPage() {
             Week of {dayjs().startOf("week").format("MMM D")} – {dayjs().endOf("week").format("MMM D, YYYY")}
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-          <BarChart3 className="h-4 w-4" />
-          Data is refreshed hourly from native social APIs.
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard/automations"
+            className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <Workflow className="h-4 w-4" />
+            Workflows
+          </Link>
+          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <BarChart3 className="h-4 w-4" />
+            Data is refreshed hourly from native social APIs.
+          </div>
         </div>
       </header>
 
