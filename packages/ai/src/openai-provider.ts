@@ -31,46 +31,34 @@ export class OpenAiProvider implements AiProvider {
       .filter(Boolean)
       .join("\n");
 
-    const response = await this.client.responses.create({
-      model: "gpt-4.1-mini",
-      input: prompt,
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "social_post",
-          schema: {
-            type: "object",
-            properties: {
-              variations: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    text: { type: "string" },
-                    hashtags: {
-                      type: "array",
-                      items: { type: "string" },
-                    },
-                  },
-                  required: ["text", "hashtags"],
-                },
-              },
-              imagePrompt: { type: "string" },
+      const response = await this.client.responses.create({
+        model: "gpt-4.1-mini",
+        input: prompt,
+      });
+
+      const content = response.output_text ?? "";
+      let parsed: AiGenerationResult = {
+        variations: [],
+        imagePrompt: undefined,
+      };
+
+      try {
+        const json = JSON.parse(content);
+        parsed = {
+          variations: json.variations ?? [],
+          imagePrompt: json.imagePrompt,
+        };
+      } catch {
+        parsed = {
+          variations: [
+            {
+              text: content,
+              hashtags: [],
             },
-            required: ["variations"],
-          },
-        },
-      },
-    });
+          ],
+        };
+      }
 
-    const content = response.output_text;
-    const parsed = JSON.parse(content);
-
-    const result: AiGenerationResult = {
-      variations: parsed.variations ?? [],
-      imagePrompt: parsed.imagePrompt,
-    };
-
-    return result;
+      return parsed;
   }
 }

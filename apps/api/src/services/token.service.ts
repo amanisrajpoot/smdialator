@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { type SignOptions, type Secret } from "jsonwebtoken";
 import { prisma } from "../config/prisma";
 import { env } from "../config/env";
 import { randomUUID } from "node:crypto";
@@ -16,9 +16,13 @@ export async function createAccessToken(userId: string, workspaceId?: string, ro
     role,
   };
 
-  return jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: env.JWT_EXPIRATION,
-  });
+  return jwt.sign(
+    payload,
+    env.JWT_SECRET as Secret,
+    {
+      expiresIn: env.JWT_EXPIRATION,
+    } as SignOptions
+  );
 }
 
 export async function createRefreshToken(userId: string) {
@@ -37,7 +41,7 @@ export async function createRefreshToken(userId: string) {
 }
 
 export function verifyAccessToken(token: string) {
-  return jwt.verify(token, env.JWT_SECRET) as AccessTokenPayload;
+  return jwt.verify(token, env.JWT_SECRET as Secret) as AccessTokenPayload;
 }
 
 export async function rotateRefreshToken(oldToken: string) {

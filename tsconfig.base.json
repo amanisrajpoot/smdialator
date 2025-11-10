@@ -12,10 +12,12 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
+      "@scheduler/api/*": ["apps/api/src/*"],
       "@connectors/*": ["packages/connectors/src/*"],
       "@ai/*": ["packages/ai/src/*"],
       "@n8n/*": ["packages/n8n/src/*"],
-      "@common/*": ["packages/common/src/*"]
+      "@common/*": ["packages/common/src/*"],
+      "@api-lib/*": ["apps/web/app/api/_lib/*"]
     }
   }
 }

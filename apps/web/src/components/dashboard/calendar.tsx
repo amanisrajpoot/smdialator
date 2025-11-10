@@ -46,15 +46,17 @@ export function DashboardCalendar() {
         </button>
       </div>
       <div className="mt-6 grid grid-cols-7 gap-3">
-        {days.map((day) => (
-          <div key={day.format("YYYY-MM-DD")} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
-            <div className={clsx("flex items-center justify-between", day.isToday() && "text-brand-500")}>
+          {days.map((day) => {
+            const isToday = day.isSame(dayjs(), "day");
+            return (
+              <div key={day.format("YYYY-MM-DD")} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
+                <div className={clsx("flex items-center justify-between", isToday && "text-brand-500")}>
               <span className="font-medium">{day.format("ddd")}</span>
-              <span className={clsx("flex h-6 w-6 items-center justify-center rounded-full", day.isToday() && "bg-brand-500 text-white")}>
+                  <span className={clsx("flex h-6 w-6 items-center justify-center rounded-full", isToday && "bg-brand-500 text-white")}>
                 {day.format("D")}
               </span>
-            </div>
-            <div className="mt-3 space-y-2">
+                </div>
+                <div className="mt-3 space-y-2">
               {sampleEvents
                 .filter((event) => dayjs(event.datetime).isSame(day, "day"))
                 .map((event) => (
@@ -71,9 +73,10 @@ export function DashboardCalendar() {
                     </p>
                   </div>
                 ))}
-            </div>
-          </div>
-        ))}
+                </div>
+              </div>
+            );
+          })}
       </div>
     </div>
   );

@@ -98,6 +98,13 @@ model User {
   workspaces     WorkspaceMember[]
   refreshTokens  RefreshToken[]
   auditLogs      AuditLog[]       @relation("UserAuditLogs")
+  contentCreated ContentItem[]    @relation("ContentCreatedBy")
+  contentUpdated ContentItem[]    @relation("ContentUpdatedBy")
+  contentVersions ContentVersion[]
+  contentComments ContentComment[]
+  scheduledPosts ScheduledPost[]  @relation("ScheduledPostCreatedBy")
+  assets         Asset[]
+  automationWorkflows AutomationWorkflow[] @relation("AutomationCreatedBy")
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 }
@@ -242,8 +249,9 @@ model ScheduledPost {
   content         ContentItem     @relation(fields: [contentId], references: [id])
   campaign        Campaign?       @relation(fields: [campaignId], references: [id])
   profile         SocialProfile   @relation(fields: [profileId], references: [id])
-  createdBy       User            @relation(fields: [createdById], references: [id])
+  createdBy       User            @relation("ScheduledPostCreatedBy", fields: [createdById], references: [id])
   publishingJobs  PublishingJob[]
+  metrics         SocialMetric[]
 }
 
 model PublishingJob {
@@ -309,7 +317,7 @@ model AutomationWorkflow {
   updatedAt      DateTime            @updatedAt
 
   workspace      Workspace           @relation(fields: [workspaceId], references: [id])
-  createdBy      User                @relation(fields: [createdById], references: [id])
+  createdBy      User                @relation("AutomationCreatedBy", fields: [createdById], references: [id])
 }
 
 model AuditLog {

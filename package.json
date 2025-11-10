@@ -17,6 +17,7 @@
     "db:seed": "ts-node --project tsconfig.base.json prisma/seed.ts"
   },
   "devDependencies": {
+    "@prisma/client": "^5.20.0",
     "@typescript-eslint/eslint-plugin": "^8.9.0",
     "@typescript-eslint/parser": "^8.9.0",
     "eslint": "^9.9.0",

@@ -4,6 +4,7 @@ import { SocialPlatform as SocialPlatformEnum } from "@scheduler/common";
 import { BaseConnector } from "./base";
 import {
   ConnectorFeature,
+  type ConnectorConfig,
   type ConnectorCredentials,
   type PublishPayload,
   type PublishResult,
@@ -68,12 +69,21 @@ export class GoogleBusinessConnector extends BaseConnector {
     };
   }
 
-  async fetchInsights(credentials: ConnectorCredentials, options: { locationName?: string }): Promise<InsightsResult> {
-    if (!options.locationName) {
+  async fetchInsights(
+    credentials: ConnectorCredentials,
+    options: { since?: Date; until?: Date; postId?: string },
+    config?: ConnectorConfig
+  ): Promise<InsightsResult> {
+    const locationName =
+      (options as unknown as { locationName?: string }).locationName ??
+      (config?.additionalConfig?.["locationName"] as string | undefined) ??
+      (credentials.metadata?.["locationName"] as string | undefined);
+
+    if (!locationName) {
       throw new Error("Google Business insights requires locationName");
     }
 
-    const response = await axios.get(`https://mybusiness.googleapis.com/v4/${options.locationName}/insights`, {
+    const response = await axios.get(`https://mybusiness.googleapis.com/v4/${locationName}/insights`, {
       headers: { Authorization: `Bearer ${credentials.accessToken}` },
     });
 

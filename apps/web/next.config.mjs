@@ -1,9 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["@scheduler/common"],
-  },
-  transpilePackages: ["@scheduler/common"],
+  transpilePackages: ["@scheduler/common", "@scheduler/api", "@scheduler/connectors", "@scheduler/ai", "@scheduler/n8n"],
 };
 
 export default nextConfig;

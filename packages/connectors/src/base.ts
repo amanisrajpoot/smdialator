@@ -24,14 +24,14 @@ export abstract class BaseConnector implements SocialConnector {
   abstract publish(credentials: ConnectorCredentials, payload: PublishPayload, config?: ConnectorConfig): Promise<PublishResult>;
 
   refreshCredentials?(
-    _credentials: ConnectorCredentials,
-    _config?: ConnectorConfig
-  ): Promise<ConnectorCredentials> | ConnectorCredentials;
+    credentials: ConnectorCredentials,
+    config?: ConnectorConfig
+  ): Promise<ConnectorCredentials>;
 
   fetchInsights?(
-    _credentials: ConnectorCredentials,
-    _options: { since?: Date; until?: Date; postId?: string },
-    _config?: ConnectorConfig
+    credentials: ConnectorCredentials,
+    options: { since?: Date; until?: Date; postId?: string },
+    config?: ConnectorConfig
   ): Promise<InsightsResult>;
 
   handleWebhook?(_payload: ConnectorWebhookPayload, _config?: ConnectorConfig): Promise<void>;

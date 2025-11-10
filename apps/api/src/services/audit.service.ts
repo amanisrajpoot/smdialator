@@ -1,4 +1,5 @@
 import { prisma } from "../config/prisma";
+import type { Prisma } from "@prisma/client";
 
 interface AuditEvent {
   workspaceId: string;
@@ -6,7 +7,7 @@ interface AuditEvent {
   action: string;
   entity: string;
   entityId?: string;
-  payload?: Record<string, unknown>;
+  payload?: Prisma.InputJsonValue;
 }
 
 export async function recordAudit(event: AuditEvent) {
@@ -17,7 +18,7 @@ export async function recordAudit(event: AuditEvent) {
       action: event.action,
       entity: event.entity,
       entityId: event.entityId,
-      payload: event.payload ?? {},
+      payload: (event.payload ?? {}) as Prisma.InputJsonValue,
     },
   });
 }
