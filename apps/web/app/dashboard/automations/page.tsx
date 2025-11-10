@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Workflow, Play, RefreshCw, ExternalLink, AlertCircle, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Workflow, Play, RefreshCw, ExternalLink, AlertCircle, CheckCircle2, ArrowLeft, ChevronDown } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEffect, useState } from "react";
@@ -9,7 +9,7 @@ import { setAuthToken } from "@/lib/api";
 import { WorkflowList } from "@/components/dashboard/workflow-list";
 import Link from "next/link";
 
-const workspaceId = process.env.NEXT_PUBLIC_DEMO_WORKSPACE_ID;
+const defaultWorkspaceId = process.env.NEXT_PUBLIC_DEMO_WORKSPACE_ID;
 const n8nBaseUrl = process.env.NEXT_PUBLIC_N8N_BASE_URL;
 
 interface N8nWorkflow {
@@ -19,14 +19,41 @@ interface N8nWorkflow {
   tags?: string[];
 }
 
+interface Workspace {
+  workspace: {
+    id: string;
+    name: string;
+    slug: string;
+    timezone: string;
+  };
+  role: string;
+}
+
 export default function AutomationsPage() {
   const { accessToken } = useAuthStore();
   const queryClient = useQueryClient();
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(workspaceId || null);
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(defaultWorkspaceId || null);
 
   useEffect(() => {
     setAuthToken(accessToken);
   }, [accessToken]);
+
+  // Fetch user's workspaces
+  const { data: workspaces } = useQuery<Workspace[]>({
+    queryKey: ["workspaces"],
+    queryFn: async () => {
+      const { data } = await apiClient.get("/api/workspaces");
+      return data.data;
+    },
+    enabled: Boolean(accessToken),
+  });
+
+  // Auto-select first workspace if none selected
+  useEffect(() => {
+    if (!selectedWorkspaceId && workspaces && workspaces.length > 0) {
+      setSelectedWorkspaceId(workspaces[0].workspace.id);
+    }
+  }, [workspaces, selectedWorkspaceId]);
 
   const { data: workflows, isLoading, error, refetch } = useQuery<N8nWorkflow[]>({
     queryKey: ["n8n-workflows", selectedWorkspaceId],
@@ -155,12 +182,37 @@ export default function AutomationsPage() {
         </div>
       )}
 
-      {!selectedWorkspaceId && (
+      {workspaces && workspaces.length > 0 && (
+        <div className="mt-6">
+          <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Select Workspace</label>
+          <div className="relative">
+            <select
+              value={selectedWorkspaceId || ""}
+              onChange={(e) => setSelectedWorkspaceId(e.target.value || null)}
+              className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-4 py-2 pr-10 text-sm font-medium text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+            >
+              <option value="">Select a workspace...</option>
+              {workspaces.map((ws) => (
+                <option key={ws.workspace.id} value={ws.workspace.id}>
+                  {ws.workspace.name} ({ws.role})
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          </div>
+        </div>
+      )}
+
+      {!selectedWorkspaceId && (!workspaces || workspaces.length === 0) && (
         <div className="mt-6 flex items-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-800 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300">
           <AlertCircle className="h-5 w-5" />
           <div>
-            <p className="font-semibold">Workspace not selected</p>
-            <p className="text-sm">Please set NEXT_PUBLIC_DEMO_WORKSPACE_ID or select a workspace.</p>
+            <p className="font-semibold">No workspace available</p>
+            <p className="text-sm">
+              {accessToken
+                ? "You need to be a member of at least one workspace to view workflows."
+                : "Please log in to access workflows."}
+            </p>
           </div>
         </div>
       )}
