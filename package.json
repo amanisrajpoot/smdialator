@@ -12,6 +12,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write .",
     "typecheck": "turbo run typecheck",
+    "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "ts-node --project tsconfig.base.json prisma/seed.ts"
